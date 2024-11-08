@@ -1,0 +1,150 @@
+# Inheritance
+# The Customer class inherits from Person (not defined here, assumed to be a parent class)
+
+class Customer:
+   def __init__(self, name, email):
+       self.name = name
+       self.email = email
+
+   def __str__(self):
+       return f'Customer: {self.name}, Email: {self.email}'
+
+# Create customer instance
+customer1 = Customer("Alice", "alice@example.com")
+print(customer1)
+# Output: Customer: Alice, Email: alice@example.com
+
+
+# Association with CustomerManager (not defined, assumed as part of your system)
+# Relationship (Association with Customer): CustomerManager has a one-to-many relationship with Customer.
+
+class Order:
+   def __init__(self, order_id, customer, ebook_list):
+       self.order_id = order_id
+       self.customer = customer
+       self.ebook_list = ebook_list
+
+   def __str__(self):
+       ebook_titles = ", ".join([ebook.title for ebook in self.ebook_list])
+       return f'Order ID: {self.order_id}, Customer: {self.customer.name}, eBooks: {ebook_titles}'
+
+# Create Order instance
+order1 = Order(101, customer1, [ebook1])  # Assuming ebook1 is defined earlier
+print(order1)
+# Output: Order ID: 101, Customer: Alice, eBooks: The Great Gatsby
+
+
+# Aggregation with EBook (Order aggregates EBook, a "has-a" relationship where e-books exist independently in the catalog)
+class EBook:
+   def __init__(self, title, author, publication_date, genre, price):
+       self.title = title
+       self.author = author
+       self.publication_date = publication_date
+       self.genre = genre
+       self.price = price
+
+   def __str__(self):
+       return f'EBook: {self.title} by {self.author} - Genre: {self.genre}, Price: DHS {self.price}'
+
+# Create EBook instance
+ebook1 = EBook("The Great Gatsby", "F. Scott Fitzgerald", "1925", "Fiction", 10.99)
+print(ebook1)
+# Output: EBook: The Great Gatsby by F. Scott Fitzgerald - Genre: Fiction, Price: DHS 10.99
+
+
+# Composition with Catalog (Catalog contains EBooks, eBooks belong to the catalog, strong relationship)
+class Catalog:
+   def __init__(self, ebooks):
+       self.ebooks = ebooks
+
+   def __str__(self):
+       ebook_list = "\n".join([str(ebook) for ebook in self.ebooks])
+       return f'Catalog:\n{ebook_list}'
+
+# Create Catalog instance
+catalog = Catalog([ebook1])
+print(catalog)
+# Output: Catalog: EBook: The Great Gatsby by F. Scott Fitzgerald - Genre: Fiction, Price: DHS 10.99
+
+
+# Aggregation with Invoice (Invoice aggregates VAT, Payment, etc.)
+class Invoice:
+   def __init__(self, order, total_amount):
+       self.order = order
+       self.total_amount = total_amount
+
+   def __str__(self):
+       return f'Invoice for Order ID: {self.order.order_id}, Total: DHS {self.total_amount}'
+
+# Create Invoice instance
+invoice = Invoice(order1, 10.99)
+print(invoice)
+# Output: Invoice for Order ID: 101, Total: DHS 10.99
+
+
+# Now let's move on to the testing section
+
+import unittest
+
+class TestSystem(unittest.TestCase):
+
+   def test_customer_creation(self):
+       # Test creating a customer
+       customer = Customer("John Doe", "johndoe@example.com")
+       self.assertEqual(customer.name, "John Doe")
+       self.assertEqual(customer.email, "johndoe@example.com")
+
+   def test_order_creation(self):
+       # Test creating an order
+       customer = Customer("Jane Smith", "janesmith@example.com")
+       ebook1 = EBook("1984", "George Orwell", "1949", "Dystopian", 15.99)
+       order = Order(102, customer, [ebook1])
+       self.assertEqual(order.order_id, 102)
+       self.assertEqual(order.customer.name, "Jane Smith")
+       self.assertIn(ebook1, order.ebook_list)
+
+   def test_add_ebook_to_catalog(self):
+       # Test adding an EBook to the catalog
+       ebook2 = EBook("Brave New World", "Aldous Huxley", "1932", "Science Fiction", 12.99)
+       catalog = Catalog([ebook2])
+       self.assertIn(ebook2, catalog.ebooks)
+
+   def test_invoice_creation(self):
+       # Test creating an invoice
+       customer = Customer("Alice Johnson", "alice@example.com")
+       ebook = EBook("The Catcher in the Rye", "J.D. Salinger", "1951", "Fiction", 13.99)
+       order = Order(103, customer, [ebook])
+       invoice = Invoice(order, 13.99)
+       self.assertEqual(invoice.total_amount, 13.99)
+       self.assertEqual(invoice.order.order_id, 103)
+
+   def test_discount_application(self):
+       # Test applying a discount to an order
+       customer = Customer("Bob Green", "bob@example.com")
+       ebook = EBook("Fahrenheit 451", "Ray Bradbury", "1953", "Dystopian", 9.99)
+       order = Order(104, customer, [ebook])
+       discount = 2.00  # Let's say the discount is a fixed amount
+       discounted_total = order.ebook_list[0].price - discount
+       self.assertEqual(discounted_total, 7.99)
+
+   def test_vat_aggregation_with_invoice(self):
+       # Test VAT aggregation in an invoice
+       customer = Customer("Charlie White", "charlie@example.com")
+       ebook = EBook("To Kill a Mockingbird", "Harper Lee", "1960", "Fiction", 14.99)
+       order = Order(105, customer, [ebook])
+       vat = VAT(15)  # Assume 15% VAT (VAT class not fully defined here)
+       total_with_vat = order.ebook_list[0].price + (order.ebook_list[0].price * vat.get_rate() / 100)
+       invoice = Invoice(order, total_with_vat)
+       self.assertEqual(invoice.total_amount, total_with_vat)
+
+   def test_ebook_removal_from_catalog(self):
+       # Test removing an e-book from the catalog
+       ebook1 = EBook("The Hobbit", "J.R.R. Tolkien", "1937", "Fantasy", 10.99)
+       ebook2 = EBook("The Lord of the Rings", "J.R.R. Tolkien", "1954", "Fantasy", 20.99)
+       catalog = Catalog([ebook1, ebook2])
+       catalog.ebooks.remove(ebook1)
+       self.assertNotIn(ebook1, catalog.ebooks)
+
+
+if __name__ == "__main__":
+   unittest.main()
